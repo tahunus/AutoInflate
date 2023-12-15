@@ -274,21 +274,21 @@ void configPage1() //PROFILE
   
   int onTimeMin = (profileVar.onTime / 60) % 60;
   int onTimeSec = profileVar.onTime % 60;
-  char buf1[5];
+  char buf1[8];   //------------------------------------------------------changed from 5 (need -> 4 (for onTimeMin) + 1 (for :) + 2 (for onTimeSec) + 1 (for \0) = 7 bytes)
   sprintf(buf1, "%d:%02d", onTimeMin, onTimeSec);
   u8g2.setFont(u8g2_font_helvB08_tr);
   u8g2.drawStr(35, 10, buf1);
 
   int offTimeMin = (profileVar.offTime / 60) % 60;
   int offTimeSec = profileVar.offTime % 60;
-  char buf2[5];
+  char buf2[8];    //------------------------------------------------------changed from 5
   sprintf(buf2, "%d:%02d", offTimeMin, offTimeSec);
   u8g2.setFont(u8g2_font_helvB08_tr);
   u8g2.drawStr(57, 56, buf2);
 
   int cycleTimeMin = (profileVar.cycleTime / 60) % 60;
   int cycleTimeSec = profileVar.cycleTime % 60;
-  char buf4[6];
+  char buf4[8];  //--------------------------------------------------------changed from 6
   sprintf(buf4, "%02d:%02d", cycleTimeMin, cycleTimeSec);
   u8g2.setFont(u8g2_font_helvB08_tr);
   u8g2.drawStr(94, 23, buf4); 
@@ -429,7 +429,7 @@ void configPage2()//HUG
   int onTimeMin = (hugVar.hugTime / 60) % 60;
   int onTimeSec = hugVar.hugTime % 60;
 
-  char buf[5];
+  char buf[8];  //--------------------------------------------------------changed from 5
   sprintf(buf, "%d:%02d", onTimeMin, onTimeSec);
   u8g2.setFont(u8g2_font_helvB08_tr);
   u8g2.drawStr(53, 11, buf);

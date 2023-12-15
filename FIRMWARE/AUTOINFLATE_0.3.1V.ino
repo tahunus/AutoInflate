@@ -32,20 +32,83 @@ SOFTWARE.
 #include <Adafruit_NeoPixel.h>
 #include <Preferences.h>
 
-byte MaxPressure = 30;  //This number should remain low! Somewhere around 30 for 3PSI for safety!
+byte MaxPressure = 30; //This number should remain low! Somewhere around 30 for 3PSI for safety!
 
 #include "globalVariables.h"
 #include "graphics.h"
-#include "sysFunctions.h"
 
-void setup() {
+void ARDUINO_ISR_ATTR onTimer1()
+{
+  STOP();
+}
+void ARDUINO_ISR_ATTR onTimer2()
+{
+  if(airSys.pumpState)
+  {
+    airSys.pumpPressure = 0;
+    airSys.pumpState = 0;
+    airSys.solenoidState = 0;
+    timerStop(timer2);
+    timerRestart(timer2);
+    timerWrite(timer2,(profileVar.offTime * 1000000));
+    timerStart(timer2);
+  }
+  else
+  {
+    airSys.pumpPressure = profileVar.highPressure;
+    airSys.pumpState = 1;
+    airSys.solenoidState = 1;
+    timerStop(timer2);
+    timerRestart(timer2);
+    timerWrite(timer2,(profileVar.onTime * 1000000));
+    timerStart(timer2);
+  } 
+}
+
+void handleEncoderInterrupt() 
+{
+  bool encoderState = digitalRead(encoderPinA);
+  if (encoderState != lastEncoderState) 
+  {
+    if (digitalRead(encoderPinB) != encoderState) 
+    {
+      encoderInput++;
+    } 
+    else 
+    {
+      encoderInput--;
+    }
+    encoderConstain(); 
+  }
+  lastEncoderState = encoderState;
+
+  selectorPreviousMillis = millis();//Reset flash timer.
+  flash = false;
+}
+
+void handleButtonPress() 
+{
+  bool buttonState = digitalRead(buttonPin);
+  if(buttonState == false) //ON - Button is nominal HIGH!
+  {
+    isButtonPressed = true;
+    encoderInteraction();
+  }
+  else if(buttonState == true) //OFF
+  {
+    isButtonPressed = false;
+  }
+}
+
+void setup(void) 
+{
   Wire.begin(3, 4);
-  u8g2.setI2CAddress(0x78);  //0x78 (0x3C), 0x7A (0x3D)
+  u8g2.setI2CAddress(0x78); //0x78 (0x3C), 0x7A (0x3D)
   u8g2.begin();
-  Serial.begin(9600);  //SERIAL DEBUG IF NEEDED
+  Serial.begin(9600); //SERIAL DEBUG IF NEEDED
   pixels.begin();
-
-  pinMode(BATTERY, INPUT);  //14k/2k divider
+  
+  pinMode(BATTERY, INPUT); //14k/2k divider
   pinMode(encoderPinA, INPUT);
   pinMode(encoderPinB, INPUT);
   pinMode(buttonPin, INPUT);
@@ -57,32 +120,33 @@ void setup() {
   sensor.setFluidDensity(997);  // Set the fluid density for pressure calculations
   sensor.init();
   sensor.read();
-
-  analogReadResolution(12);  //FOR READING BATTERY LEVEL
-
+  
+  analogReadResolution(12);//FOR READING BATTERY LEVEL
+  
   preferences.begin("DATAStore", false);
-  airSys.freq = preferences.getUInt("AIRS_freq", 5000);  //Load default for PWM functions before starting.
+  airSys.freq = preferences.getUInt("AIRS_freq", 5000);//Load default for PWM functions before starting.
   preferences.end();
 
   ledcSetup(pumpChannel, airSys.freq, resolution);
   ledcAttachPin(pumpPin, pumpChannel);
 
-  timer1 = timerBegin(0, 80, false);  //Timer#, Prescaler, (True count up, false count down).
+  timer1 = timerBegin(0, 80, false);//Timer#, Prescaler, (True count up, false count down).
   timerStop(timer1);
   timerAttachInterrupt(timer1, &onTimer1, true);
   timerRestart(timer1);
 
-  timer2 = timerBegin(1, 80, false);  //Timer#, Prescaler, (True count up, false count down).
+  timer2 = timerBegin(1, 80, false);//Timer#, Prescaler, (True count up, false count down).
   timerStop(timer2);
   timerAttachInterrupt(timer2, &onTimer2, true);
   timerRestart(timer2);
-
-  for (int thisReading = 0; thisReading < numReadings; thisReading++)  //Load zeros to average array.
+  
+  for (int thisReading = 0; thisReading < numReadings; thisReading++)//Load zeros to average array.
+    {
+      readings[thisReading] = 0;
+    }
+  
+  for (int i = 0; i <= 50; i++) 
   {
-    readings[thisReading] = 0;
-  }
-
-  for (int i = 0; i <= 50; i++) {
     airSys.PRESSUREmbar = sensor.pressure();
     u8g2.clearBuffer();
     u8g2.setBitmapMode(1);
@@ -99,15 +163,11 @@ void setup() {
     delay(100);
     sensor.read();
   }
-  airSys.pressureOffset = airSys.PRESSUREmbar * 100;  //FUNCTION TO SET INITIAL PRESSURE OFFSET!
-
+  airSys.pressureOffset = airSys.PRESSUREmbar * 100; //FUNCTION TO SET INITIAL PRESSURE OFFSET!
+  
   attachInterrupt(digitalPinToInterrupt(encoderPinA), handleEncoderInterrupt, CHANGE);
-  attachInterrupt(
-    digitalPinToInterrupt(buttonPin), [] {
-      if (ButtonPressed += (millis() - DebounceTimer) >= (delayTime)) DebounceTimer = millis();
-    },
-    FALLING);
-
+  attachInterrupt(digitalPinToInterrupt(buttonPin), [] {if (ButtonPressed+= (millis() - DebounceTimer) >= (delayTime )) DebounceTimer = millis();}, FALLING);
+  
   //LOAD SAVED VALUES (pageNumber, RW)
   storedData(3, 0);
   storedData(4, 0);
@@ -115,36 +175,40 @@ void setup() {
   storedData(7, 0);
 }
 
-void loop() {
+void loop(void)
+{
   currentMillis = millis();
-
-  if (ButtonPressed > 0)  //ENCODER BUTTON PRESS DEBOUNCE
+  
+  if (ButtonPressed > 0) //ENCODER BUTTON PRESS DEBOUNCE
   {
     handleButtonPress();
     ButtonPressed = 0;
   }
-
-  if (currentMillis - selectorPreviousMillis >= selectorInterval)  //GENERAL TIMED DELAY
+  
+  if(currentMillis - selectorPreviousMillis >= selectorInterval) //GENERAL TIMED DELAY
   {
-    if (!flash) {
+    if(!flash)
+    {
       flash = true;
-    } else {
+    }
+    else
+    {
       flash = false;
     }
-    powerLevel = constrain(analogRead(5), 0, 1300);  //READ BATTERY VOLTAGE
+    powerLevel = constrain(analogRead(5), 0, 1300); //READ BATTERY VOLTAGE
     selectorPreviousMillis = currentMillis;
   }
 
   //MAIN DISPLAY LOOP
-  u8g2.clearBuffer();  //BEGIN FRAME
+  u8g2.clearBuffer(); //BEGIN FRAME
   u8g2.setBitmapMode(1);
   displayData();
-  u8g2.sendBuffer();  //END FRAME
-
+  u8g2.sendBuffer(); //END FRAME
+  
   pixels.clear();
   pixels.setPixelColor(0, pixels.Color(0, 0, encoderInput));
   pixels.setPixelColor(1, pixels.Color(encoderInput, 0, 0));
-  pixels.show();
+  pixels.show();   
 
   getAveragePressure();
   airSYSLOOP();
@@ -240,7 +304,7 @@ void getAveragePressure()
     }
 }
 
-#include "menuPages.h" //--------------------------------------------solve dependencies and move to #include section
+#include "menuPages.h" //---------------------------------------------resolve dependencies and move to #include section
 
 void encoderInteraction()//ONE TIME EXECUTE
 {
