@@ -32,15 +32,15 @@ SOFTWARE.
 #include <Adafruit_NeoPixel.h>
 #include <Preferences.h>
 
-byte MaxPressure = 30; //This number should remain low! Somewhere around 30 for 3PSI for safety!
-
 #include "globalVariables.h"
-#include "graphics.h"
+#include "frontEnd.h" 
+//#include "backEnd.h"
 
 void ARDUINO_ISR_ATTR onTimer1()
 {
   STOP();
 }
+
 void ARDUINO_ISR_ATTR onTimer2()
 {
   if(airSys.pumpState)
@@ -78,7 +78,7 @@ void handleEncoderInterrupt()
     {
       encoderInput--;
     }
-    encoderConstain(); 
+    encoderInput = constrain(encoderInput, encoderConstrainValMin, encoderConstrainValMax);
   }
   lastEncoderState = encoderState;
 
@@ -105,7 +105,7 @@ void setup(void)
   Wire.begin(3, 4);
   u8g2.setI2CAddress(0x78); //0x78 (0x3C), 0x7A (0x3D)
   u8g2.begin();
-  Serial.begin(9600); //SERIAL DEBUG IF NEEDED
+  Serial.begin(115200); //SERIAL DEBUG IF NEEDED
   pixels.begin();
   
   pinMode(BATTERY, INPUT); //14k/2k divider
@@ -160,7 +160,7 @@ void setup(void)
     u8g2.setDrawColor(2);
     u8g2.drawBox(0, 43, boxWidth, 18);
     u8g2.sendBuffer();
-    delay(100);
+    delay(100); 
     sensor.read();
   }
   airSys.pressureOffset = airSys.PRESSUREmbar * 100; //FUNCTION TO SET INITIAL PRESSURE OFFSET!
@@ -304,11 +304,26 @@ void getAveragePressure()
     }
 }
 
-#include "menuPages.h" //---------------------------------------------resolve dependencies and move to #include section
-
-void encoderInteraction()//ONE TIME EXECUTE
+void encoderInteraction()  //ONE TIME EXECUTE
 {
-  buttonPressFunc(pageNumber);
+  switch (pageNumber) {
+    case 1:
+      mainPageActions(); //MAIN PAGE   
+      break;
+    case 2:
+      mainConfigPageActions(); //CONFIG PAGE
+      break;
+    case 3:   //PROFILE
+    case 4:   //HUG
+    case 5:   //AIRSYS
+    case 6:   //MOTION
+    case 7:   //CONFIG
+    case 8:   //WIFI
+    case 9:   //-----TBD1
+    case 10:  //-----TBD2 and all of the above
+      configPageActions(); 
+      break;
+  }
   encoderConstrainValMin = 0;
   encoderConstrainValMax = PageElements[pageNumber];
 }
@@ -368,6 +383,7 @@ void hugRun()
     STOP();
   }
 }
+
 void displayData()//CONTINUOUS EXECUTE
 {
   switch (pageNumber)
@@ -392,45 +408,6 @@ void displayData()//CONTINUOUS EXECUTE
       break;
     case 7:
       configPage5(); //CONFIG
-      break;
-    default:
-      break;
-  }
-}
-void buttonPressFunc(byte PG)//ONE TIME EXECUTE
-{
-//int storedValue = ((PG << 8) + EL);
-switch (PG)
-  {
-    case 1:
-      mainPageActions(); //MAIN PAGE   
-      break;
-    case 2:
-      mainConfigPageActions(); //CONFIG PAGE
-      break;
-    case 3:
-      configPageActions(); //PROFILE
-      break;
-    case 4:
-      configPageActions(); //HUG
-      break;
-    case 5:
-      configPageActions(); //AIRSYS
-      break;
-    case 6:
-      configPageActions(); //MOTION
-      break;
-    case 7:
-      configPageActions(); //CONFIG
-      break;
-    case 8:
-      configPageActions(); //WIFI
-      break;
-    case 9:
-      configPageActions(); //-----
-      break;
-    case 10:
-      configPageActions(); //-----
       break;
     default:
       break;
@@ -474,6 +451,7 @@ void mainPageActions()
     }
 
 }
+
 void mainConfigPageActions()//CONFIG PAGE
 {
   element = encoderInput;
@@ -487,6 +465,7 @@ void mainConfigPageActions()//CONFIG PAGE
     encoderInput = 0;
   }
 }
+
 void configPageActions()//SUB CONFIG PAGES
 {
   if(changeValue)
@@ -528,43 +507,6 @@ void configPageActions()//SUB CONFIG PAGES
   }
 }
 
-void runningAnimation()
-{
-  if(airSys.pumpState)
-  {
-    if(frameCount == 0)
-    {
-      u8g2.drawXBMP( 8, 29, 25, 31, image_VEST2_ANIMATION_1_bits);
-    }
-    else if(frameCount == 1)
-    {
-      u8g2.drawXBMP( 8, 29, 25, 31, image_VEST2_ANIMATION_2_bits);
-    }
-    else if(frameCount == 2)
-    {
-      u8g2.drawXBMP( 8, 29, 25, 31, image_VEST2_ANIMATION_3_bits);
-    }
-
-    if(currentMillis - animationPreviousMillis >= animationFlipInterval)
-    {
-      if(frameCount == 0)
-      {
-        frameCount++;
-      }
-      else if (frameCount == 1)
-      {
-        frameCount++;
-      }
-      else if (frameCount == 2)
-      {
-        frameCount = 0;
-      }
-      animationPreviousMillis = currentMillis;
-    }
-  }
-}
-
-
 void STOP()
 {
   airSys.solenoidState = 0;
@@ -578,11 +520,6 @@ void STOP()
   timerRestart(timer2);
   
   pulseFeedback = 2;
-}
-
-void encoderConstain()
-{
-  encoderInput = constrain(encoderInput, encoderConstrainValMin, encoderConstrainValMax);
 }
 
 void storedData(byte PG, byte RW)//pageNumber, read/write

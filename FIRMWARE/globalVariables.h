@@ -1,3 +1,5 @@
+byte MaxPressure = 30; //This number should remain low! Somewhere around 30 for 3PSI for safety!
+
 //PINS
 const int encoderPinA = 7;  // Encoder pin A
 const int encoderPinB = 6;  // Encoder pin B
