@@ -320,7 +320,7 @@ void encoderInteraction()  //ONE TIME EXECUTE
     case 7:   //CONFIG
     case 8:   //WIFI
     case 9:   //-----TBD1
-    case 10:  //-----TBD2 and all of the above
+    case 10:  //-----TBD2 (and cases 3 thru 9, above)
       configPageActions(); 
       break;
   }
@@ -331,33 +331,27 @@ void encoderInteraction()  //ONE TIME EXECUTE
 void profileRUN()
 {
   airSys.runType = 1;
-  if((profileVar.cycleTime != 0) && (profileVar.onTime != 0))
+  if (profileVar.cycleTime != 0 && profileVar.onTime != 0 && 
+      profileVar.cycleTime >= profileVar.onTime + 1)  
   {
-    if(profileVar.cycleTime >= (profileVar.onTime + 1))
-    {
-      timerRestart(timer1);
-      timerWrite(timer1,(profileVar.cycleTime * 1000000));
-      timerAlarmWrite(timer1, 0, false);
-      timerAlarmEnable(timer1);
-      timerStart(timer1);
+    timerRestart(timer1);
+    timerWrite(timer1,(profileVar.cycleTime * 1000000));
+    timerAlarmWrite(timer1, 0, false);
+    timerAlarmEnable(timer1);
+    timerStart(timer1);
 
-      //profileVar.runState = 1;
-      timerRestart(timer2);
-      timerWrite(timer2,(profileVar.onTime * 1000000));
-      timerAlarmWrite(timer2, 0, true);
-      timerAlarmEnable(timer2);
-      timerStart(timer2);
+    //profileVar.runState = 1;
+    timerRestart(timer2);
+    timerWrite(timer2,(profileVar.onTime * 1000000));
+    timerAlarmWrite(timer2, 0, true);
+    timerAlarmEnable(timer2);
+    timerStart(timer2);
         
-      airSys.pumpPressure = profileVar.highPressure;
-      airSys.pumpState = 1;
-      airSys.solenoidState = 1;
-    }
-    else
-    {
-      STOP();
-    }
+    airSys.pumpPressure = profileVar.highPressure;
+    airSys.pumpState = 1;
+    airSys.solenoidState = 1;
   }
-  else
+  else 
   {
     STOP();
   }
@@ -408,48 +402,28 @@ void displayData()//CONTINUOUS EXECUTE
       break;
     case 7:
       configPage5(); //CONFIG
-      break;
-    default:
-      break;
   }
 }
 
 void mainPageActions()
 {
   element = encoderInput;
-  if(element == 0)//STOP
-    {
-      STOP();
-    }
-  else if(element == 1)//HUG
-    {
-      if(airSys.runType > 0)
-      {
-        STOP();
-      }
-      else
-      {
-        hugRun();
-      }
-    }
-  else if(element == 2)//PROFILE
-    {
-      if(airSys.runType > 0)
-      {
-        STOP();
-      }
-      else
-      {
-        profileRUN();
-      }
-      
-    }
-  else if(element == 3)//CONFIG
-    {
-      pageNumber = 2;
-      encoderInput = 0; 
-    }
-
+  switch (element) {
+    case 0: STOP();                //STOP
+            break;
+    case 1: if(airSys.runType > 0) //HUG
+              STOP(); 
+            else 
+              hugRun();
+            break;
+    case 2: if(airSys.runType > 0) //PROFILE
+              STOP(); 
+            else 
+              profileRUN();
+            break;
+    case 3: pageNumber = 2;        //CONFIG
+            encoderInput = 0; 
+  }
 }
 
 void mainConfigPageActions()//CONFIG PAGE
@@ -489,7 +463,7 @@ void configPageActions()//SUB CONFIG PAGES
       encoderInputTemp = 0;
       encoderInput = 0; 
     }
-    else if(encoderInput != 0)
+    else if(encoderInput != 0) //--------------------------------------redundant?
     {    
       changeValue = 1;
       element = encoderInput;

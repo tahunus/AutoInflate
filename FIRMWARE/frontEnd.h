@@ -102,7 +102,7 @@ void mainPage()
   u8g2.drawXBMP( 53, 0, 18, 18, image_STOP_bits);
   u8g2.drawXBMP( 110, 0, 18, 18, image_SETTINGS_bits);
 
-  //-----------------------------------------------------------------------refactored from main.ino : runningAnimation(); line 532
+  //for runningAnimation
   if(airSys.pumpState) 
   {
     u8g2.drawXBMP(8, 29, 25, 31, image_VEST2_ANIMATIONS[frameCount]); //frameCount always >= 0 && <= 2
@@ -118,11 +118,13 @@ void mainPage()
   u8g2.drawBox(119, 39, 7, tempPowerLevel); //BATTERY LEVEL INDICATOR
 
   //draw the selectArrow and flash it if airSys is running
-  if (airSys.runType > 0)   { 
+  if (airSys.runType > 0)   
+  { 
     u8g2.setDrawColor(!flash);
     u8g2.drawXBMP(arrowX[encoderInput], 19, 14, 7, image_selectArrow_bits);
   }
-  else   {
+  else   
+  {
     u8g2.setDrawColor(1);
     u8g2.drawXBMP(arrowX[encoderInput], 19, 14, 7, image_selectArrowOpen_bits);
   }
@@ -144,8 +146,10 @@ void configMainPage()
 
   //flash the corresponding frame or the BACK arrow
   u8g2.setDrawColor(!flash);
-  if (encoderInput > 0) u8g2.drawBox(frameX + (frameW +2) * (encoderInput -1) +1, frameY +1, frameW -2 , frameH -2);
-  else u8g2.drawXBMP(cfg.imgX, cfg.imgY, cfg.imgW, cfg.imgH, cfg.image);
+  if (encoderInput > 0) 
+    u8g2.drawBox(frameX + (frameW +2) * (encoderInput -1) +1, frameY +1, frameW -2 , frameH -2);
+  else 
+    u8g2.drawXBMP(cfg.imgX, cfg.imgY, cfg.imgW, cfg.imgH, cfg.image);
 }
 
 void configPage1() //PROFILE
@@ -190,21 +194,21 @@ void configPage1() //PROFILE
   
   if(!changeValue) {
     switch (encoderInput) {
-      case 0: u8g2.setDrawColor(!flash); //flash BACK arrow
+      case 0: u8g2.setDrawColor(!flash);                                  //flash BACK arrow
               u8g2.drawXBMP( 0, 57, 9, 7, image_Pin_arrow_left_9x7_bits);  
               break;
       case 1: encoderInputTemp = (profileVar.highPressure * 0.0146) / 10; //PROFILE PRESSURE
               break;
-      case 2: encoderInputTemp = profileVar.onTime; //PROFILE ON-TIME
+      case 2: encoderInputTemp = profileVar.onTime;                       //PROFILE ON-TIME
               break;
-      case 3: encoderInputTemp = profileVar.offTime; //PROFILE OFF-TIME
+      case 3: encoderInputTemp = profileVar.offTime;                      //PROFILE OFF-TIME
               break;
-      case 4: encoderInputTemp = profileVar.cycleTime; //PROFILE CYCLE TIME
+      case 4: encoderInputTemp = profileVar.cycleTime;                    //PROFILE CYCLE TIME
               break;
       case 5: SAVE = true; 
-              if (!flash) u8g2.drawRBox(104, 53, 24, 11, 1); //flash SAVE icon
+              if (!flash) u8g2.drawRBox(104, 53, 24, 11, 1);              //flash SAVE icon
               break;
-      case 6: if (!flash) u8g2.drawRBox(90, 52, 12, 12, 3); //flash HELP icon
+      case 6: if (!flash) u8g2.drawRBox(90, 52, 12, 12, 3);               //flash HELP icon
     }
     if (encoderInput > 0 && encoderInput < 5 && !flash) //flash the frame around the selected text input
         u8g2.drawFrame(txtX[encoderInput-1] -2, txtY[encoderInput-1] -10, txtW[encoderInput-1], 12);
@@ -253,7 +257,7 @@ void configPage2()  //HUG
   int onTimeMin = (hugVar.hugTime / 60) % 60;
   int onTimeSec = hugVar.hugTime % 60;
 
-  char buf[8];  //-changed from 5
+  char buf[8];  //changed from 5
   sprintf(buf, "%d:%02d", onTimeMin, onTimeSec);
   u8g2.setFont(u8g2_font_helvB08_tr);
   u8g2.drawStr(txtX[1], txtY[1], buf);
@@ -265,17 +269,17 @@ void configPage2()  //HUG
 
   if(!changeValue) {
     switch (encoderInput) {
-      case 0: u8g2.setDrawColor(!flash); //flash BACK arrow
+      case 0: u8g2.setDrawColor(!flash);                             //flash BACK arrow
               u8g2.drawXBMP( 0, 57, 9, 7, image_Pin_arrow_left_9x7_bits);  
               break;
       case 1: encoderInputTemp = (hugVar.hugPressure * 0.0146) / 10; //HUG PRESSURE
               break;
-      case 2: encoderInputTemp = hugVar.hugTime; //HUG TIME
+      case 2: encoderInputTemp = hugVar.hugTime;                     //HUG TIME
               break;
       case 3: SAVE = true; 
-              if (!flash) u8g2.drawRBox(104, 53, 24, 11, 1); //flash SAVE icon
+              if (!flash) u8g2.drawRBox(104, 53, 24, 11, 1);         //flash SAVE icon
               break;
-      case 4: if (!flash) u8g2.drawRBox(90, 52, 12, 12, 3); //flash HELP icon
+      case 4: if (!flash) u8g2.drawRBox(90, 52, 12, 12, 3);          //flash HELP icon
     }
     if (encoderInput > 0 && encoderInput < 3 && !flash) //flash the frame around the selected text input
         u8g2.drawFrame(txtX[encoderInput-1] -2, txtY[encoderInput-1] -10, txtW[encoderInput-1], 12);
@@ -286,7 +290,7 @@ void configPage2()  //HUG
       case 1: encoderConstrainValMax = MaxPressure; //HUG PRESSURE
               hugVar.hugPressure = encoderInput * 689.4;
               break;
-      case 2: encoderConstrainValMax = 599;  // HUG TIME
+      case 2: encoderConstrainValMax = 599;         // HUG TIME
               hugVar.hugTime = encoderInput; 
               break;                                //SAVE
       case 3: break;         
@@ -347,20 +351,20 @@ void configPage3()//AIRSYS
   
   if(!changeValue) {
     switch (encoderInput) {
-      case 0: u8g2.setDrawColor(!flash); //flash BACK arrow
+      case 0: u8g2.setDrawColor(!flash);                                   //flash BACK arrow
               u8g2.drawXBMP( 0, 57, 9, 7, image_Pin_arrow_left_9x7_bits);  
               break;
-      case 1: encoderInputTemp = map(airSys.maxPumpPWM, 0, 1023, 0, 51); //MAXIMUM PWM
+      case 1: encoderInputTemp = map(airSys.maxPumpPWM, 0, 1023, 0, 51);   //MAXIMUM PWM
               break;
-      case 2: encoderInputTemp = (airSys.maxPressure * 0.0146) / 10;; //MAXIMUM PRESSURE
+      case 2: encoderInputTemp = (airSys.maxPressure * 0.0146) / 10;;      //MAXIMUM PRESSURE
               break;
       case 3: encoderInputTemp = (airSys.thresholdPressure * 0.0146) / 10; //RAMP THRESHOLD PRESSURE
               break;
       case 4: SAVE = true; 
-              if (!flash) u8g2.drawRBox(104, 53, 24, 11, 1); //flash SAVE icon
+              if (!flash) u8g2.drawRBox(104, 53, 24, 11, 1);               //flash SAVE icon
               break;
       case 5: u8g2.setDrawColor(2); 
-              if (!flash) u8g2.drawRBox(90, 52, 12, 12, 3); //flash HELP icon
+              if (!flash) u8g2.drawRBox(90, 52, 12, 12, 3);                //flash HELP icon
               break;
     }
     if (encoderInput > 0 && encoderInput < 4 && !flash) { //flash the frame around the selected text input
@@ -371,16 +375,16 @@ void configPage3()//AIRSYS
   else {
     encoderConstrainValMin = 0;
     switch (element) {
-      case 1: encoderConstrainValMax = 51; //MAXIMUM PWM
+      case 1: encoderConstrainValMax = 51;          //MAXIMUM PWM
               airSys.maxPumpPWM = map(encoderInput, 0, 51, 0, 1023);
               break;
       case 2: encoderConstrainValMax = MaxPressure; //MAXIMUM PRESSURE
               airSys.maxPressure = encoderInput * 689.4; 
               break;                              
-      case 3: encoderConstrainValMax = 5; //RAMP THRESHOLD PRESSURE
+      case 3: encoderConstrainValMax = 5;           //RAMP THRESHOLD PRESSURE
               airSys.thresholdPressure = encoderInput * 689.4;
               break;   
-      case 4: break; //SAVE - BLANK     
+      case 4: break;                                //SAVE - BLANK     
       case 5: clearScreen();                        //HELP
               u8g2.setFont(u8g2_font_helvB08_tr);
               u8g2.drawStr(0, 8, "PUMP MAX - Maximum");
@@ -430,24 +434,24 @@ void configPage5()//CONFIG
 
   if(!changeValue)
     switch (encoderInput) {
-      case 0: if(!flash) {                              //SAVE
+      case 0: if(!flash) {                             //SAVE
                 u8g2.setDrawColor(2);
                 u8g2.drawBox(0, 53, 24, 11);
               }
               break;
-      case 1: encoderInputTemp = airSys.minPumpPWM;     //PUMP MINIMUM PWM
+      case 1: encoderInputTemp = airSys.minPumpPWM;    //PUMP MINIMUM PWM
               if(!flash) {
                 u8g2.setDrawColor(1);
                 u8g2.drawFrame(47, 0, 21, 12);
               }
               break;
-      case 2: encoderInputTemp = (airSys.freq * 0.02);  //PWM FREQUENCY
+      case 2: encoderInputTemp = (airSys.freq * 0.02); //PWM FREQUENCY
               if(!flash) {
                 u8g2.setDrawColor(1);
                 u8g2.drawFrame(50, 12, 26, 12);
               }
               break;
-      case 3: if(!flash) {                              //ALL CLEAR
+      case 3: if(!flash) {                             //ALL CLEAR
                 u8g2.setDrawColor(2);
                 u8g2.drawRBox(69, 52, 59, 11, 3);
               }
