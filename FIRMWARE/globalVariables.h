@@ -93,7 +93,7 @@ struct airSystemAttributes
   int PRESSUREAveragembar;
   float PRESSUREAveragepsi;
   int pressureOffset;
-}; airSystemAttributes airSys = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};  //-------------------------------added 15th initializer
+}; airSystemAttributes airSys = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; 
 
 //MOTION VARIABLES
 struct motionAttributes

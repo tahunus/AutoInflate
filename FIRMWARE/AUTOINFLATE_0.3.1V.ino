@@ -36,15 +36,12 @@ SOFTWARE.
 #include "frontEnd.h" 
 //#include "backEnd.h"
 
-void ARDUINO_ISR_ATTR onTimer1()
-{
+void ARDUINO_ISR_ATTR onTimer1()  {
   STOP();
 }
 
-void ARDUINO_ISR_ATTR onTimer2()
-{
-  if(airSys.pumpState)
-  {
+void ARDUINO_ISR_ATTR onTimer2() {
+  if(airSys.pumpState)   {
     airSys.pumpPressure = 0;
     airSys.pumpState = 0;
     airSys.solenoidState = 0;
@@ -53,8 +50,7 @@ void ARDUINO_ISR_ATTR onTimer2()
     timerWrite(timer2,(profileVar.offTime * 1000000));
     timerStart(timer2);
   }
-  else
-  {
+  else   {
     airSys.pumpPressure = profileVar.highPressure;
     airSys.pumpState = 1;
     airSys.solenoidState = 1;
@@ -65,17 +61,13 @@ void ARDUINO_ISR_ATTR onTimer2()
   } 
 }
 
-void handleEncoderInterrupt() 
-{
+void handleEncoderInterrupt() {
   bool encoderState = digitalRead(encoderPinA);
-  if (encoderState != lastEncoderState) 
-  {
-    if (digitalRead(encoderPinB) != encoderState) 
-    {
+  if (encoderState != lastEncoderState)   {
+    if (digitalRead(encoderPinB) != encoderState)  {
       encoderInput++;
     } 
-    else 
-    {
+    else {
       encoderInput--;
     }
     encoderInput = constrain(encoderInput, encoderConstrainValMin, encoderConstrainValMax);
@@ -86,22 +78,18 @@ void handleEncoderInterrupt()
   flash = false;
 }
 
-void handleButtonPress() 
-{
+void handleButtonPress() {
   bool buttonState = digitalRead(buttonPin);
-  if(buttonState == false) //ON - Button is nominal HIGH!
-  {
+  if(buttonState == false) {  //ON - Button is nominal HIGH!
     isButtonPressed = true;
     encoderInteraction();
   }
-  else if(buttonState == true) //OFF
-  {
+  else if(buttonState == true) {  //OFF
     isButtonPressed = false;
   }
 }
 
-void setup(void) 
-{
+void setup(void) {
   Wire.begin(3, 4);
   u8g2.setI2CAddress(0x78); //0x78 (0x3C), 0x7A (0x3D)
   u8g2.begin();
@@ -140,13 +128,11 @@ void setup(void)
   timerAttachInterrupt(timer2, &onTimer2, true);
   timerRestart(timer2);
   
-  for (int thisReading = 0; thisReading < numReadings; thisReading++)//Load zeros to average array.
-    {
+  for (int thisReading = 0; thisReading < numReadings; thisReading++)  { //Load zeros to average array.
       readings[thisReading] = 0;
-    }
+  }
   
-  for (int i = 0; i <= 50; i++) 
-  {
+  for (int i = 0; i <= 50; i++)  {
     airSys.PRESSUREmbar = sensor.pressure();
     u8g2.clearBuffer();
     u8g2.setBitmapMode(1);
@@ -175,24 +161,19 @@ void setup(void)
   storedData(7, 0);
 }
 
-void loop(void)
-{
+void loop(void)  {
   currentMillis = millis();
   
-  if (ButtonPressed > 0) //ENCODER BUTTON PRESS DEBOUNCE
-  {
+  if (ButtonPressed > 0) { //ENCODER BUTTON PRESS DEBOUNCE
     handleButtonPress();
     ButtonPressed = 0;
   }
   
-  if(currentMillis - selectorPreviousMillis >= selectorInterval) //GENERAL TIMED DELAY
-  {
-    if(!flash)
-    {
+  if(currentMillis - selectorPreviousMillis >= selectorInterval) {  //GENERAL TIMED DELAY
+    if(!flash)  {
       flash = true;
     }
-    else
-    {
+    else  {
       flash = false;
     }
     powerLevel = constrain(analogRead(5), 0, 1300); //READ BATTERY VOLTAGE
@@ -214,58 +195,46 @@ void loop(void)
   airSYSLOOP();
 }
 
-void airSYSLOOP()
-{ 
+void airSYSLOOP()  { 
     int tempPWM = 0;
-    if(airSys.PRESSUREAveragembar < airSys.thresholdPressure) //check for low pressure to start ramping up      
-    {
+    if(airSys.PRESSUREAveragembar < airSys.thresholdPressure) { //check for low pressure to start ramping up      
       tempPWM = map(airSys.PRESSUREAveragembar, 0, airSys.thresholdPressure, airSys.minPumpPWM, airSys.maxPumpPWM);  //map(value, fromLow, fromHigh, toLow, toHigh)
     }
-    else if(airSys.PRESSUREAveragembar >= airSys.thresholdPressure) 
-    {
-      if(airSys.PRESSUREAveragembar >= airSys.pumpPressure) //turn pump off if pressure was reached
-      {
+    else if(airSys.PRESSUREAveragembar >= airSys.thresholdPressure)  {
+      if(airSys.PRESSUREAveragembar >= airSys.pumpPressure)  { //turn pump off if pressure was reached
         tempPWM = 0;
       }
-      else if((airSys.pumpPressure - airSys.PRESSUREAveragembar) >= airSys.thresholdPressure) //run max until inside the ramp window
-      {
+      else if((airSys.pumpPressure - airSys.PRESSUREAveragembar) >= airSys.thresholdPressure) {  //run max until inside the ramp window
         tempPWM = airSys.maxPumpPWM;
       }
-      else if((airSys.pumpPressure - airSys.PRESSUREAveragembar) < airSys.thresholdPressure) //ramp down to the max pressure and maintain
-      {
+      else if((airSys.pumpPressure - airSys.PRESSUREAveragembar) < airSys.thresholdPressure) {  //ramp down to the max pressure and maintain
         int tempPressure = airSys.pumpPressure - airSys.PRESSUREAveragembar;
         tempPressure = constrain(tempPressure, 0, airSys.thresholdPressure);
         tempPWM = map(tempPressure, 0, airSys.thresholdPressure, airSys.minPumpPWM, airSys.maxPumpPWM);
       }
     }
     
-  if(airSys.pumpState && (airSys.pumpPressure != 0))
-  {
+  if(airSys.pumpState && (airSys.pumpPressure != 0)) {
     ledcWrite(pumpChannel, tempPWM);
   }
-  else
-  {
+  else {
     ledcWrite(pumpChannel, 0);
   }
 
-  if(airSys.solenoidState)
-  {
+  if(airSys.solenoidState) {
     digitalWrite(solenoidPin, HIGH);
   }
-  else
-  {
+  else {
     digitalWrite(solenoidPin, LOW);
   }
 
-  if(pulseFeedback > 0) //Feedback pulses from pump.
-  {
+  if(pulseFeedback > 0) {  //Feedback pulses from pump.
     delay(100);
     pixels.clear();
     pixels.setPixelColor(0, pixels.Color(255, 0, 0));
     pixels.setPixelColor(1, pixels.Color(255, 0, 0));
     pixels.show();   
-    for (int i = 1; i <= pulseFeedback; i++) 
-    {
+    for (int i = 1; i <= pulseFeedback; i++)     {
       ledcWrite(pumpChannel, 1023);
       delay(100);
       ledcWrite(pumpChannel, 0);
@@ -275,15 +244,12 @@ void airSYSLOOP()
   }
 }
 
-void getAveragePressure()
-{
-    if(currentMillis - pressurePreviousMillis >= pressureReadInterval) 
-    {
+void getAveragePressure()  {
+    if(currentMillis - pressurePreviousMillis >= pressureReadInterval) {
       sensor.read();
       //int tempPressure = (sensor.pressure() * 0.0145038) - pressureOffset;
       int tempPressure = (sensor.pressure() * 100) - airSys.pressureOffset;
-      if(tempPressure < 0)
-      {
+      if(tempPressure < 0)  {
         tempPressure = 0;
       }
 
@@ -292,8 +258,7 @@ void getAveragePressure()
       total = total + readings[readIndex];
       readIndex = readIndex + 1;
 
-      if (readIndex >= numReadings) 
-      {
+      if (readIndex >= numReadings) {
         readIndex = 0;
       }
 
@@ -304,8 +269,7 @@ void getAveragePressure()
     }
 }
 
-void encoderInteraction()  //ONE TIME EXECUTE
-{
+void encoderInteraction()  { //ONE TIME EXECUTE
   switch (pageNumber) {
     case 1:
       mainPageActions(); //MAIN PAGE   
@@ -328,12 +292,10 @@ void encoderInteraction()  //ONE TIME EXECUTE
   encoderConstrainValMax = PageElements[pageNumber];
 }
 
-void profileRUN()
-{
+void profileRUN()  {
   airSys.runType = 1;
   if (profileVar.cycleTime != 0 && profileVar.onTime != 0 && 
-      profileVar.cycleTime >= profileVar.onTime + 1)  
-  {
+      profileVar.cycleTime >= profileVar.onTime + 1)  {
     timerRestart(timer1);
     timerWrite(timer1,(profileVar.cycleTime * 1000000));
     timerAlarmWrite(timer1, 0, false);
@@ -351,16 +313,13 @@ void profileRUN()
     airSys.pumpState = 1;
     airSys.solenoidState = 1;
   }
-  else 
-  {
+  else {
     STOP();
   }
 }
 
-void hugRun()
-{
-  if(hugVar.hugTime != 0)
-  {
+void hugRun()  {
+  if(hugVar.hugTime != 0)  {
     timerRestart(timer1);
     timerWrite(timer1,(hugVar.hugTime * 1000000));
     timerAlarmWrite(timer1, 0, false);
@@ -372,16 +331,13 @@ void hugRun()
     airSys.pumpState = 1;
     airSys.solenoidState = 1;
   }
-  else
-  {
+  else  {
     STOP();
   }
 }
 
-void displayData()//CONTINUOUS EXECUTE
-{
-  switch (pageNumber)
-  {
+void displayData()  {//CONTINUOUS EXECUTE
+  switch (pageNumber)  {
     case 1:
       mainPage(); //MAIN PAGE
       break;
@@ -405,8 +361,7 @@ void displayData()//CONTINUOUS EXECUTE
   }
 }
 
-void mainPageActions()
-{
+void mainPageActions() {
   element = encoderInput;
   switch (element) {
     case 0: STOP();                //STOP
@@ -426,36 +381,28 @@ void mainPageActions()
   }
 }
 
-void mainConfigPageActions()//CONFIG PAGE
-{
+void mainConfigPageActions()  {  //CONFIG PAGE
   element = encoderInput;
-  if(element == 0)
-  {
+  if(element == 0)  {
     pageNumber = 1;
   }
-  else if(element > 0)
-  {
+  else if(element > 0)  {
     pageNumber = encoderInput +2;//SKIP FIRST TWO PAGES
     encoderInput = 0;
   }
 }
 
-void configPageActions()//SUB CONFIG PAGES
-{
-  if(changeValue)
-  {
+void configPageActions()  {  //SUB CONFIG PAGES
+  if(changeValue)  {
     changeValue = 0;
     encoderConstrainValMin = 0;
     encoderConstrainValMax = PageElements[pageNumber];
     encoderInput = element;
     maxPressureCheck();
   }
-  else
-  {
-    if(encoderInput == 0)
-    {
-      if(pageNumber == 7)//Special condition for CONFIG page.
-      {
+  else {
+    if(encoderInput == 0)  {
+      if(pageNumber == 7)  {  //Special condition for CONFIG page.
         storedData(pageNumber, 1);
         ESP.restart();        
       }      
@@ -463,15 +410,13 @@ void configPageActions()//SUB CONFIG PAGES
       encoderInputTemp = 0;
       encoderInput = 0; 
     }
-    else if(encoderInput != 0) //--------------------------------------redundant?
-    {    
+    else if(encoderInput != 0) {  //--------------------------------------redundant?  
       changeValue = 1;
       element = encoderInput;
       encoderInput = encoderInputTemp; //RECALL DATA
     }
   }
-  if(SAVE)
-  {
+  if(SAVE)  {
     storedData(pageNumber, 1);
     element = 0;
     encoderInput = 0;
@@ -481,8 +426,7 @@ void configPageActions()//SUB CONFIG PAGES
   }
 }
 
-void STOP()
-{
+void STOP()  {
   airSys.solenoidState = 0;
   airSys.pumpState = 0;
   airSys.runType = 0;
@@ -496,14 +440,11 @@ void STOP()
   pulseFeedback = 2;
 }
 
-void storedData(byte PG, byte RW)//pageNumber, read/write
-{
+void storedData(byte PG, byte RW)  {  //pageNumber, read/write
   preferences.begin("DATAStore", false);
-  switch (PG)
-  {
+  switch (PG)   {
     case 3://PROFILE
-      if(!RW)//READ
-      {
+      if(!RW)  {  //READ
         profileVar.highPressure = preferences.getUInt("PRO_highpres", 0);
         profileVar.onTime = preferences.getUInt("PRO_ontime", 0);
         profileVar.offTime = preferences.getUInt("PRO_offtime", 0);
@@ -518,8 +459,7 @@ void storedData(byte PG, byte RW)//pageNumber, read/write
         Serial.print(" : ");
         Serial.println(profileVar.cycleTime);
       }
-      else//WRITE
-      {
+      else  {  //WRITE
         preferences.putUInt("PRO_highpres", profileVar.highPressure);
         preferences.putUInt("PRO_ontime", profileVar.onTime);
         preferences.putUInt("PRO_offtime", profileVar.offTime);
@@ -536,8 +476,7 @@ void storedData(byte PG, byte RW)//pageNumber, read/write
       }
       break;
     case 4://HUG
-      if(!RW)//READ
-      {
+      if(!RW)  {  //READ
         hugVar.hugTime = preferences.getUInt("HUG_hugtime", 0);
         hugVar.hugPressure = preferences.getUInt("HUG_hugpres", 0);
 
@@ -545,10 +484,8 @@ void storedData(byte PG, byte RW)//pageNumber, read/write
         Serial.print(hugVar.hugTime);
         Serial.print(" : ");
         Serial.println(hugVar.hugPressure);
-        
       }
-      else//WRITE
-      {
+      else  {  //WRITE
         preferences.putUInt("HUG_hugtime", hugVar.hugTime);
         preferences.putUInt("HUG_hugpres", hugVar.hugPressure);
 
@@ -559,8 +496,7 @@ void storedData(byte PG, byte RW)//pageNumber, read/write
       }
       break;
     case 5://AIRSYS
-      if(!RW)//READ
-      {
+      if(!RW)  {  //READ
         airSys.maxPumpPWM = preferences.getUInt("AIRS_maxPWM", 900);//0-1023
         airSys.rampPump = preferences.getChar("AIRS_ramp", 0);
         airSys.maxPressure = preferences.getUInt("AIRS_maxpres", 13788);//DEFAULT PRESSURE 2PSI=13788(mBAR/100)
@@ -575,8 +511,7 @@ void storedData(byte PG, byte RW)//pageNumber, read/write
         Serial.print(" : ");
         Serial.println(airSys.thresholdPressure);
       }
-      else//WRITE
-      {
+      else  {  //WRITE
         preferences.putUInt("AIRS_maxPWM", airSys.maxPumpPWM);
         preferences.putChar("AIRS_ramp", airSys.rampPump);
         preferences.putUInt("AIRS_maxpres", airSys.maxPressure);
@@ -590,15 +525,13 @@ void storedData(byte PG, byte RW)//pageNumber, read/write
         Serial.print(airSys.maxPressure);
         Serial.print(" : ");
         Serial.println(airSys.thresholdPressure);
-        
       }
       break;
     case 6://MOTION
       configPageActions(); 
       break;
     case 7://CONFIG
-      if(!RW)
-      {
+      if(!RW)   {
         airSys.minPumpPWM = preferences.getUInt("AIRS_minPWM", 200);//0-1023 DEFAULT LOW PWM
         airSys.freq = preferences.getUInt("AIRS_freq", 5000);//DEFAULT PWM FREQUENCY
 
@@ -607,8 +540,7 @@ void storedData(byte PG, byte RW)//pageNumber, read/write
         Serial.print(" : ");
         Serial.println(airSys.freq);
       }
-      else
-      {
+      else    {
         preferences.putUInt("AIRS_minPWM", airSys.minPumpPWM);
         preferences.putUInt("AIRS_freq", airSys.freq);
 
@@ -636,15 +568,12 @@ void storedData(byte PG, byte RW)//pageNumber, read/write
   pulseFeedback = 1;
 }
 
-void maxPressureCheck()
-{
-  if(profileVar.highPressure > airSys.maxPressure)
-  {
+void maxPressureCheck()  {
+  if(profileVar.highPressure > airSys.maxPressure)  {
     profileVar.highPressure = airSys.maxPressure;
     pulseFeedback = 1;
   }
-  if(hugVar.hugPressure > airSys.maxPressure)
-  {
+  if(hugVar.hugPressure > airSys.maxPressure)  {
     hugVar.hugPressure = airSys.maxPressure;
     pulseFeedback = 1;
   }
