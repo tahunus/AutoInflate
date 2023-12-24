@@ -35,7 +35,7 @@ SOFTWARE.
 #include "globalVariables.h"
 #include "backEnd.h"
 #include "frontEnd.h" 
-#include "hardwareOS.h"
+#include "hwControl.h"
 
 void setup(void) {
   Wire.begin(3, 4);
