@@ -6,6 +6,8 @@ Custom-designed solution for inflation-style sensory and anxiety vests.
 
 ###
 
+Update Dec/2023: See [release notes](https://github.com/tahunus/AutoInflate/releases/tag/0.3.2V) for latest comments
+
 Welcome! This page contains all the necessary files and instructions to build this device. Please read through each section carefully! If you've found this page, you're seeking to build your own automated inflation device based on this design for inflation-style sensory and anxiety vests. My goal for designing this device was to automate the inflation and deflation cycles on my own [Squease Vest®](https://www.squeasewear.com/). My thanks to [@tahunus ](https://github.com/tahunus) for giving me the inspiration to continue the development of this project!
 
 **_Update 11/28/23: It appears that Squease will be relaunching soon! This is good news for those unable to get a vest prior to the company shutting down operations earlier this year. Yay!_**
