@@ -1,5 +1,5 @@
-const char* ssid = "qENTERPRISE";
-const char* password = "doctorhouse2020";
+const char* ssid = "";
+const char* password = "";
 const int UDPport = 12345; 
 
 #define DEBUG_PRINT  //if commented out, all debug serial output statments become empty when compiled
