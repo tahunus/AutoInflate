@@ -66,7 +66,7 @@ class WiFi_API {
       return false;
     }
 
-    StaticJsonDocument<200> docOUT;  //--------------------------------------------TO DO: confirm size
+    StaticJsonDocument<200> docOUT;
     String response = "";
     //catalogued error msgs of input JSON data in response packet
     void sendError(String msg) { 
@@ -101,7 +101,11 @@ class WiFi_API {
         sendError("Device in Inflation cycle");
         return;
       }
-      StaticJsonDocument<200> docIN;  //--------------------------------------------TO DO: confirm size
+      if (packet.length()>200) {  //largest method is under 200 bytes
+        sendError("Packet length > 200");
+        return;
+      }
+      StaticJsonDocument<200> docIN;  
       DeserializationError error = deserializeJson(docIN, packet.data(), packet.length());
       if (error) {
         sendError("Invalid JSON string");
@@ -178,7 +182,7 @@ class WiFi_API {
                   whatToRun = newConfig;
                   break; 
           case 4: MaxPressure = docIN["MaxPressure"];
-                  //will be lost after next reboot since it's hard coded---------------------------
+                  //NOTE: will be lost after next reboot since variable is hard coded
         }
         docOUT.clear();
         docOUT["method"] = docIN["method"];
@@ -293,11 +297,11 @@ class WiFi_API {
           validateUDP(packet);
           packet.print(response);
         });
-      }//-------------------------------------------------TO DO:else handle UDP listen not running
+      }//optionally, handle UDP listen not running
     }
 
     void chkProcess() {
-      //------------------------------------------TO DO:add chk to confirm wifi connect. & decision if it can't
+      //----------------------------------TO DO:add chk if wifi connect lost & decision if it can't reconnect
       if (whatToRun == newConfig) {
         whatToRun = nothing;
         storedData(7, true); //pagenumber is 7 => config. It calls ESP.restart
